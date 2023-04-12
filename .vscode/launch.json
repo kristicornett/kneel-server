@@ -1,13 +1,15 @@
 {
-   "version": "0.2.0",
+    "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "Request Handler",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "./request_handler.py",
             "console": "integratedTerminal",
-            
+            "autoReload": {
+                "enable": true
+            }
         }
     ]
 }

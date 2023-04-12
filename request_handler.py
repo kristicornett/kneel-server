@@ -34,7 +34,7 @@ class HandleRequests(BaseHTTPRequestHandler):
 
     def do_GET(self):
         """Handles GET requests to the server """
-        self._set_headers(200)
+        
         response = {} #default response
 
         #parsing url to capture tuple
@@ -45,7 +45,14 @@ class HandleRequests(BaseHTTPRequestHandler):
             if id is not None:
                 response = get_single_metal(id)
 
+                if response is not None:
+                    self._set_headers(200)
+                else:
+                    self._set_headers(404)
+                    response = {'message': 'That metal is out of stock'}
+
             else:
+                self._set_headers(200)
                 response = get_all_metals()
 
         if resource == "orders":
