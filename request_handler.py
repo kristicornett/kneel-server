@@ -6,13 +6,15 @@ from views import create_metal, create_order, create_size, create_style
 from views import update_metal, update_order, update_size, update_style
 from views import delete_metal, delete_order, delete_size, delete_style
 
+# This is a class which inherits from another class.
+# A class is like a container for functions that work together.
+# That purpose is to respond to HTTP requests from a client.
 
 class HandleRequests(BaseHTTPRequestHandler):
-    """Controls the functionality of any GET, PUT, POST, DELETE requests to the server
-    """
+    '''handles fetch functions'''
 
     def parse_url(self, path):
-        """parses"""
+        '''splitting string. If the path is "/metals/1", the resulting list will have "" at index 0, "metals" at index 1, and "1" at index 2.'''
         # Just like splitting a string in JavaScript. If the
         # path is "/metals/1", the resulting list will
         # have "" at index 0, "metals" at index 1, and "1"
@@ -35,7 +37,7 @@ class HandleRequests(BaseHTTPRequestHandler):
     def do_GET(self):
         """Handles GET requests to the server """
         
-        response = {} #default response
+        response = {} #default response empty dictionary
 
         #parsing url to capture tuple
 
@@ -58,55 +60,110 @@ class HandleRequests(BaseHTTPRequestHandler):
         if resource == "orders":
             if id is not None:
                 response = get_single_order(id)
+                if response is not None:
+                    self._set_headers(200)
+                else:
+                    self._set_headers(404)
+                    response = {'message': 'This order does not exist'}
             
             else:
+                self._set_headers(200)
                 response = get_all_orders()
         
         if resource == "sizes":
             if id is not None:
                 response = get_single_size(id)
+                if response is not None:
+                    self._set_headers(200)
+                else:
+                    self._set_headers(404)
+                    response = {'message': 'That size is impossible'}
             
             else:
+                self._set_headers(200)
                 response = get_all_sizes()
         
         if resource == "styles":
             if id is not None:
                 response = get_single_style(id)
+                if response is not None:
+                    self._set_headers(200)
+                else:
+                    self._set_headers(404)
+                    response = {'message': 'that style is not available'}
             
             else:
                 response = get_all_styles()
-
+        #this sends a json format string as a response
         self.wfile.write(json.dumps(response).encode())
+
+        #method on class that overrides parent method handles posts
 
     def do_POST(self):
         """Handles POST requests to the server """
-        self._set_headers(201)
 
         content_len = int(self.headers.get('content-length', 0))
         post_body = self.rfile.read(content_len)
+        #convert json string to python dictionary
         post_body = json.loads(post_body)
-
+        #parses the url
         (resource, id) = self.parse_url(self.path)
+        #intialize new items
+
         
-        new_order = None
+        new_style = None
+        new_resource = None
+
+
         if resource == 'orders':
-            new_order = create_order(post_body)
-        self.wfile.write(json.dumps(new_order).encode())
+            if 'timestamp' in post_body:
+                self._set_headers(201)
+                new_resource = create_order(post_body)
+            else: 
+                self._set_headers(400)
+                new_resource = {'message': f'{"please add a time" if "timestamp" not in post_body else ""}'}
 
-        new_metal = None
+            
+            self.wfile.write(json.dumps(new_resource).encode())
+
+        
         if resource == 'metals':
-            new_metal = create_metal(post_body)
-        self.wfile.write(json.dumps(new_metal).encode())
+            if 'metal' in post_body and 'price' in post_body:
+                self._set_headers(201)
+                new_resource = create_metal(post_body)
+           
+            else:
+                self._set_headers(400)
+                new_resource = {
+                'message': f'{"please enter a metal" if "metal" not in post_body else ""}{"please enter a price" if "price" not in post_body else ""}'
+            }
+                self.wfile.write(json.dumps(new_resource).encode())
 
-        new_size = None
+        
         if resource == 'sizes':
-            new_size = create_size(post_body)
-        self.wfile.write(json.dumps(new_size).encode())
+            if 'carets' in post_body and 'price' in post_body:
+                self._set_headers(201)
+                new_resource = create_size(post_body)
+            
+            else:
+                self._set_headers(400)
+                new_resource = {
+                    'message': f'{"please enter carets" if "carets" not in post_body else ""}{"please enter a price" if "price" not in post_body else ""}'
+                }
+            
+            self.wfile.write(json.dumps(new_resource).encode())
 
         new_style = None
         if resource == 'styles':
-            new_style = create_style(post_body)
-        self.wfile.write(json.dumps(new_style).encode())
+            if 'style' in post_body and 'price' in post_body:
+                self._set_headers(201)
+                new_resource = create_style(post_body)
+            else:
+                self._set_headers(400)
+                new_resource = {
+                    'message': f'{"please enter style" if "style" not in post_body else ""}{"please enter a price" if "price" not in post_body else ""}'
+                }
+            self.wfile.write(json.dumps(new_resource).encode())
         
 
     def do_PUT(self):
